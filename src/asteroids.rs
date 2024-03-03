@@ -5,6 +5,7 @@ use bevy::prelude::*;
 
 use crate::{
     asset_loader::SceneAssets,
+    collision_detection::Collider,
     movement::{Acceleration, MovingObjectBundle, Velocity},
 };
 
@@ -13,6 +14,8 @@ const ACCELERATION_SCALAR: f32 = 1.0;
 const SPAWN_RANGE_X: Range<f32> = -25.0..25.0;
 const SPAWN_RANGE_Z: Range<f32> = -0.0..25.0;
 const SPAWN_TIME_SECONDS: f32 = 1.0;
+const ROTATE_SPEED: f32 = 2.5;
+const RADIUS: f32 = 2.5;
 
 #[derive(Component, Debug)]
 pub struct Asteroid;
@@ -29,7 +32,10 @@ impl Plugin for AsteroidPlugin {
         app.insert_resource(SpawnTimer {
             timer: Timer::from_seconds(SPAWN_TIME_SECONDS, TimerMode::Repeating),
         })
-        .add_systems(Update, spawn_asteroid);
+        .add_systems(
+            Update,
+            (spawn_asteroid, rotate_asteroids, handle_asteroid_collisions),
+        );
     }
 }
 
@@ -66,7 +72,29 @@ fn spawn_asteroid(
                 transform: Transform::from_translation(translation),
                 ..default()
             },
+            collider: Collider::new(RADIUS),
         },
         Asteroid,
     ));
+}
+
+fn rotate_asteroids(mut query: Query<&mut Transform, With<Asteroid>>, time: Res<Time>) {
+    for mut transform in query.iter_mut() {
+        transform.rotate_local_z(ROTATE_SPEED * time.delta_seconds());
+    }
+}
+
+fn handle_asteroid_collisions(
+    mut commands: Commands,
+    query: Query<(Entity, &Collider), With<Asteroid>>,
+) {
+    for (entity, collider) in query.iter() {
+        for &collided_entity in collider.colliding_entities.iter() {
+            if query.get(collided_entity).is_ok() {
+                continue;
+            }
+
+            commands.entity(entity).despawn_recursive();
+        }
+    }
 }
