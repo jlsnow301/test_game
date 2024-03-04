@@ -5,6 +5,7 @@ mod collision_detection;
 mod debug;
 mod despawn;
 mod movement;
+mod schedule;
 mod spaceship;
 
 use asset_loader::AssetLoaderPlugin;
@@ -12,9 +13,10 @@ use asteroids::AsteroidPlugin;
 use bevy::prelude::*;
 use camera::CameraPlugin;
 use collision_detection::CollisionDetectionPlugin;
-use debug::DebugPlugin;
+// use debug::DebugPlugin;
 use despawn::DespawnPlugin;
 use movement::MovementPlugin;
+use schedule::SchedulePlugin;
 use spaceship::SpaceShipPlugin;
 
 fn main() {
@@ -27,6 +29,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         // custom
+        .add_plugins(SchedulePlugin)
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(MovementPlugin)
         .add_plugins(CameraPlugin)
